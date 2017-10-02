@@ -72,6 +72,7 @@ def query(title):
 
 
 def normalize(title):
+
     try:
         try: return title.decode('ascii').encode("utf-8")
         except: pass

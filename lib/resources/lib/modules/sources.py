@@ -29,6 +29,7 @@ from resources.lib.modules import client
 from resources.lib.modules import debrid
 from resources.lib.modules import workers
 from resources.lib.modules import source_utils
+from resources.lib.modules import log_utils
 
 try: from sqlite3 import dbapi2 as database
 except: from pysqlite2 import dbapi2 as database
@@ -390,6 +391,120 @@ class sources:
 
         return self.sources
 
+    def getSourcesBennu(self, title, year, imdb, tvdb, season, episode, tvshowtitle, premiered, quality='HD', timeout=20):
+        u = None
+
+        progressDialog = control.progressDialog
+        progressDialog.create('Bennu', '')
+        progressDialog.update(0)
+        
+        self.prepareSources()
+
+        sourceDict = self.sourceDict
+        
+        content = 'movie' if tvshowtitle == None else 'episode'
+        if content == 'movie':
+            sourceDict = [(i[0], i[1], getattr(i[1], 'movie', None)) for i in sourceDict]
+        else:
+            sourceDict = [(i[0], i[1], getattr(i[1], 'tvshow', None)) for i in sourceDict]
+            
+        sourceDict = [(i[0], i[1], i[2]) for i in sourceDict]
+        sourceDict = [(i[0], i[1]) for i in sourceDict if not i[2] == None]
+        
+        language = self.getLanguage()
+        
+        sourceDict = [(i[0], i[1], i[1].language) for i in sourceDict]
+        sourceDict = [(i[0], i[1]) for i in sourceDict if any(x in i[2] for x in language)]
+
+        try: sourceDict = [(i[0], i[1], control.setting('provider.' + i[0])) for i in sourceDict]
+        except: sourceDict = [(i[0], i[1], 'true') for i in sourceDict]
+        sourceDict = [(i[0], i[1]) for i in sourceDict if not i[2] == 'false']
+
+        sourceDict = [(i[0], i[1], i[1].priority) for i in sourceDict]
+        
+        threads = []
+       
+        if content == 'movie':
+            title = self.getTitle(title)
+            localtitle = self.getLocalTitle(title, imdb, tvdb, content)
+            aliases = self.getAliasTitles(imdb, localtitle, content)
+            for i in sourceDict: threads.append(workers.Thread(self.getMovieSource, title, localtitle, aliases, year, imdb, i[0], i[1]))
+        else:
+            tvshowtitle = self.getTitle(tvshowtitle)
+            localtvshowtitle = self.getLocalTitle(tvshowtitle, imdb, tvdb, content)
+            aliases = self.getAliasTitles(imdb, localtvshowtitle, content)
+            for i in sourceDict: threads.append(workers.Thread(self.getEpisodeSource, title, year, imdb, tvdb, season, episode, tvshowtitle, localtvshowtitle, aliases, premiered, i[0], i[1]))
+
+        s = [i[0] + (i[1],) for i in zip(sourceDict, threads)]
+        s = [(i[3].getName(), i[0], i[2]) for i in s]
+
+        mainsourceDict = [i[0] for i in s if i[2] == 0]
+        sourcelabelDict = dict([(i[0], i[1].upper()) for i in s])
+
+        [i.start() for i in threads]
+
+        string1 = control.lang(32404).encode('utf-8')
+        string2 = control.lang(32405).encode('utf-8')
+        string3 = control.lang(32406).encode('utf-8')
+
+        try: timeout = int(control.setting('scrapers.timeout.1'))
+        except: timeout = 20
+        
+        for i in range(0, (timeout * 2) + 60):
+            try:
+                if xbmc.abortRequested == True: return sys.exit()
+
+                try: info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
+                except: info = []
+
+                timerange = int(i * 0.5)
+
+                try:
+                    if progressDialog.iscanceled(): break
+                except:
+                    pass
+                try:
+                    string4 = string1 % str(timerange)
+                    if len(info) > 5: string5 = string3 % str(len(info))
+                    else: string5 = string3 % str(info).translate(None, "[]'")
+                    progressDialog.update(int((100 / float(len(threads))) * len([x for x in threads if x.is_alive() == False])), str(string4), str(string5))
+                except:
+                    pass
+
+                is_alive = [x.is_alive() for x in threads]
+                if all(x == False for x in is_alive): break
+
+                if timerange >= timeout:
+                    is_alive = [x for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
+                    if not is_alive: break
+
+                time.sleep(0.5)
+            except:
+                pass
+
+        if progressDialog: progressDialog.update(100, control.lang(30726).encode('utf-8'), control.lang(30731).encode('utf-8'))
+        else:
+            progressDialog.create(control.addonInfo('name'), '')
+            progressDialog.update(100, control.lang(30726).encode('utf-8'), control.lang(30731).encode('utf-8'))
+        
+        items = self.sourcesFilter()
+        
+        if quality == 'RD': items = [i for i in items if i['debrid'] != '']
+        elif quality == 'SD': items = [i for i in items if i['quality'] == 'SD' and i['debrid'] == '']
+        elif quality == 'HD': items = [i for i in items if i['quality'] != 'SD']
+
+        if control.setting('bennu.dev.log') == 'true':
+            log_utils.log('Sources Returned: %s' % str(items), log_utils.LOGNOTICE)
+
+        try: progressDialog.close()
+        except: pass
+
+        if quality == 'AUTO': 
+            u = self.sourcesDirect(items)
+        else: 
+            u = self.sourcesDialog(items, addon_name='Bennu')
+
+        return u
 
     def prepareSources(self):
         try:
@@ -608,9 +723,6 @@ class sources:
         if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and not 'debrid' in i and not 'memberonly' in i]
         if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == 'HD' and not 'debrid' in i and not 'memberonly' in i]
 
-        #filter += [i for i in self.sources if i['quality'] == 'SD']
-        #if len(filter) < 10: filter += [i for i in self.sources if i['quality'] == 'SCR']
-        #if len(filter) < 10: filter += [i for i in self.sources if i['quality'] == 'CAM']
         filter += [i for i in self.sources if i['quality'] in ['SD', 'SCR', 'CAM']]
         self.sources = filter
 
@@ -629,6 +741,8 @@ class sources:
             self.sources = [i for i in self.sources if not i['language'] == 'en'] + [i for i in self.sources if i['language'] == 'en']
 
         self.sources = self.sources[:2000]
+        
+        #log_utils.log('Sources: %s' % str(self.sources), log_utils.LOGNOTICE)
 
         for i in range(len(self.sources)):
             u = self.sources[i]['url']
@@ -638,7 +752,7 @@ class sources:
             q = self.sources[i]['quality']
 
             s = self.sources[i]['source']
-
+            
             if q == 'SD': q = source_utils.check_sd_url(u)
 
             s = s.rsplit('.', 1)[0]
@@ -669,8 +783,9 @@ class sources:
 
             self.sources[i]['label'] = label.upper()
 
-        if not HEVC == 'true':
-            self.sources = [i for i in self.sources if not 'HEVC' in str(i['label'])]
+        try: 
+            if not HEVC == 'true': self.sources = [i for i in self.sources if not 'HEVC' in i['label']]
+        except: pass
 
         return self.sources
 
@@ -733,9 +848,13 @@ class sources:
             return
 
 
-    def sourcesDialog(self, items):
+    def sourcesDialog(self, items, addon_name=''):
         try:
-            labels = [i['label'] for i in items]
+        
+            if addon_name == 'Bennu':
+                labels = [re.sub('\d+\s*\|\s*', '', i['label']) for i in items]
+            else:
+                labels = [i['label'] for i in items]
 
             select = control.selectDialog(labels)
             if select == -1: return 'close://'
@@ -868,7 +987,6 @@ class sources:
 
         return u
 
-
     def errorForSources(self):
         control.infoDialog(control.lang(32401).encode('utf-8'), sound=False, icon='INFO')
 
@@ -911,7 +1029,6 @@ class sources:
     def getTitle(self, title):
         title = cleantitle.normalize(title)
         return title
-
 
     def getConstants(self):
         self.itemProperty = 'plugin.video.covenant.container.items'
