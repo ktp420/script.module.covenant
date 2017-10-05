@@ -35,7 +35,7 @@ class trailer:
         self.search_link = 'https://www.googleapis.com/youtube/v3/search?part=id&type=video&maxResults=5&q=%s' + self.key_link
         self.youtube_watch = 'https://www.youtube.com/watch?v=%s'
 
-    def play(self, name, url=None):
+    def play(self, name, url=None, windowedtrailer=0):
         try:
             url = self.worker(name, url)
             if not url: return
@@ -48,7 +48,18 @@ class trailer:
             try: item.setArt({'icon': icon})
             except: pass
             item.setInfo(type='Video', infoLabels={'title': title})
-            control.player.play(url, item)
+            control.player.play(url, item, windowedtrailer)
+            if windowedtrailer == 1:
+                # The call to the play() method is non-blocking. So we delay further script execution to keep the script alive at this spot.
+                # Otherwise this script will continue and probably already be garbage collected by the time the trailer has ended.
+                control.sleep(1000)  # Wait until playback starts. Less than 900ms is too short (on my box). Make it one second.
+                while control.player.isPlayingVideo():
+                    control.sleep(1000)
+                # Close the dialog.
+                # Same behaviour as the fullscreenvideo window when :
+                # the media plays to the end,
+                # or the user pressed one of X, ESC, or Backspace keys on the keyboard/remote to stop playback.
+                control.execute("Dialog.Close(%s, true)" % control.getCurrentDialogId)      
         except:
             pass
 

@@ -31,6 +31,7 @@ downloadPath = control.setting('downloadPath')
 property = control.addonInfo('id') + '.downloader'
 
 def downloader():
+
     thumb = control.addonThumb() ; fanart = control.addonFanart()
 
     status = control.window.getProperty(property + '.status')
@@ -59,7 +60,7 @@ def downloader():
         control.addItem(handle=int(sys.argv[1]), url=sys.argv[0]+'?action=statusDownload', listitem=item, isFolder=True)
 
     def download(): return []
-    result = cache.get(download, 600000000, table='rel_dl')
+    result = cache.bennu_download_get(download, 600000000, table='rel_dl')
 
     for i in result:
         try:
@@ -80,7 +81,7 @@ def downloader():
 def addDownload(name, url, image, provider=None):
     try:
         def download(): return []
-        result = cache.get(download, 600000000, table='rel_dl')
+        result = cache.bennu_download_get(download, 600000000, table='rel_dl')
         result = [i['name'] for i in result]
     except:
         pass
@@ -118,10 +119,10 @@ def addDownload(name, url, image, provider=None):
         pass
 
     def download(): return [{'name': name, 'url': url, 'image': image}]
-    result = cache.get(download, 600000000, table='rel_dl')
+    result = cache.bennu_download_get(download, 600000000, table='rel_dl')
     result = [i for i in result if not i['url'] == url]
     def download(): return result + [{'name': name, 'url': url, 'image': image}]
-    result = cache.get(download, 0, table='rel_dl')
+    result = cache.bennu_download_get(download, 0, table='rel_dl')
 
     control.infoDialog('Item Added to Queue', name)
 
@@ -129,13 +130,13 @@ def addDownload(name, url, image, provider=None):
 def removeDownload(url):
     try:
         def download(): return []
-        result = cache.get(download, 600000000, table='rel_dl')
+        result = cache.bennu_download_get(download, 600000000, table='rel_dl')
         if result == '': result = []
         result = [i for i in result if not i['url'] == url]
         if result == []: result = ''
 
         def download(): return result
-        result = cache.get(download, 0, table='rel_dl')
+        result = cache.bennu_download_get(download, 0, table='rel_dl')
 
         control.refresh()
     except:
@@ -230,7 +231,7 @@ class downloadThread(threading.Thread):
 
     def run(self):
         def download(): return []
-        result = cache.get(download, 600000000, table='rel_dl')
+        result = cache.bennu_download_get(download, 600000000, table='rel_dl')
 
         for item in result:
             self.name = item['name'] ; self.image = item['image'] ; self.url = item['url']
