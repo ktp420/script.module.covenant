@@ -81,9 +81,10 @@ class source:
             info = None
             for span in spans:
                 if span == 'Z lektorem':
-                    info = 'Lektor'            
-                        
-            sources.append({'source': host, 'quality': 'SD', 'language': 'pl', 'url': link, 'info': info, 'direct': False, 'debridonly': False})
+                    info = 'Lektor'
+
+            q = source_utils.check_sd_url(link)
+            sources.append({'source': host, 'quality':q, 'language': 'pl', 'url': link, 'info': info, 'direct': False, 'debridonly': False})
             
             return sources
         except:
