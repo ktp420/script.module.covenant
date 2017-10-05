@@ -73,6 +73,8 @@ button = xbmcgui.ControlButton
 
 image = xbmcgui.ControlImage
 
+getCurrentDialogId = xbmcgui.getCurrentWindowDialogId()
+
 keyboard = xbmc.Keyboard
 
 sleep = xbmc.sleep

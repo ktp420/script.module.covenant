@@ -22,7 +22,7 @@ import os,sys,urlparse
 
 from resources.lib.modules import control
 from resources.lib.modules import trakt
-
+from resources.lib.modules import cache
 
 sysaddon = sys.argv[0] ; syshandle = int(sys.argv[1]) ; control.moderator()
 
@@ -39,6 +39,7 @@ queueMenu = control.lang(32065).encode('utf-8')
 
 class navigator:
     def root(self):
+        cache.cache_version_check()
         self.addDirectoryItem(32001, 'movieNavigator', 'movies.png', 'DefaultMovies.png')
         self.addDirectoryItem(32002, 'tvNavigator', 'tvshows.png', 'DefaultTVShows.png')
 
@@ -300,6 +301,22 @@ class navigator:
         if not yes: return
         from resources.lib.modules import cache
         cache.cache_clear_meta()
+        control.infoDialog(control.lang(32057).encode('utf-8'), sound=True, icon='INFO')
+
+    def clearCacheProviders(self):
+        control.idle()
+        yes = control.yesnoDialog(control.lang(32056).encode('utf-8'), '', '')
+        if not yes: return
+        from resources.lib.modules import cache
+        cache.cache_clear_providers()
+        control.infoDialog(control.lang(32057).encode('utf-8'), sound=True, icon='INFO')
+
+    def clearCacheAll(self):
+        control.idle()
+        yes = control.yesnoDialog(control.lang(32056).encode('utf-8'), '', '')
+        if not yes: return
+        from resources.lib.modules import cache
+        cache.cache_clear_all()
         control.infoDialog(control.lang(32057).encode('utf-8'), sound=True, icon='INFO')
 
     def addDirectoryItem(self, name, query, thumb, icon, context=None, queue=False, isAction=True, isFolder=True):
