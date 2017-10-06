@@ -799,6 +799,7 @@ class episodes:
         except:
             return
 
+        sortorder = control.setting('prgr.sortorder')
         for item in result:
             try:
                 num_1 = 0
@@ -1031,7 +1032,11 @@ class episodes:
         [i.join() for i in threads]
 
 
-        try: self.list = sorted(self.list, key=lambda k: k['_sort_key'], reverse=True)
+        try:
+            if sortorder == '0':
+                self.list = sorted(self.list, key=lambda k: k['premiered'], reverse=True)
+            else:
+                self.list = sorted(self.list, key=lambda k: k['_sort_key'], reverse=True)
         except: pass
 
         return self.list
