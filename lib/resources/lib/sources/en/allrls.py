@@ -137,8 +137,6 @@ class source:
                             
                             if any(x in url.upper() for x in ['HEVC', 'X265', 'H265']): info.append('HEVC')
                             
-                            info.append('ALLRLS')
-                            
                             info = ' | '.join(info)
                             
                             host = client.replaceHTMLCodes(host)

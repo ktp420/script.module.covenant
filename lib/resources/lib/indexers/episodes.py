@@ -577,7 +577,7 @@ class episodes:
             pass
 
 
-    def calendar(self, url):
+    def calendar(self, url, click=None):
         try:
             try: url = getattr(self, url + '_link')
             except: pass
@@ -611,7 +611,7 @@ class episodes:
                 self.list = cache.get(self.tvmaze_list, 1, url, False)
 
 
-            self.episodeDirectory(self.list)
+            self.episodeDirectory(self.list, click)
             return self.list
         except:
             pass
@@ -624,11 +624,11 @@ class episodes:
             setting = control.setting('tv.widget')
 
         if setting == '2':
-            self.calendar(self.progress_link)
+            self.calendar(self.progress_link, 'play')
         elif setting == '3':
-            self.calendar(self.mycalendar_link)
+            self.calendar(self.mycalendar_link, 'play')
         else:
-            self.calendar(self.added_link)
+            self.calendar(self.added_link, 'play')
 
 
     def calendars(self, idx=True):
@@ -799,6 +799,7 @@ class episodes:
         except:
             return
 
+        sortorder = control.setting('prgr.sortorder')
         for item in result:
             try:
                 num_1 = 0
@@ -1031,7 +1032,11 @@ class episodes:
         [i.join() for i in threads]
 
 
-        try: self.list = sorted(self.list, key=lambda k: k['_sort_key'], reverse=True)
+        try:
+            if sortorder == '0':
+                self.list = sorted(self.list, key=lambda k: k['premiered'], reverse=True)
+            else:
+                self.list = sorted(self.list, key=lambda k: k['_sort_key'], reverse=True)
         except: pass
 
         return self.list
@@ -1352,7 +1357,7 @@ class episodes:
         return itemlist
 
 
-    def episodeDirectory(self, items):
+    def episodeDirectory(self, items, click=None):
         if items == None or len(items) == 0: control.idle() ; sys.exit()
 
         sysaddon = sys.argv[0]
@@ -1377,9 +1382,11 @@ class episodes:
         multi = len([x for y,x in enumerate(multi) if x not in multi[:y]])
         multi = True if multi > 1 else False
 
-        try: sysaction = items[0]['action']
-        except: sysaction = ''
-
+        if click == None:
+            try: sysaction = items[0]['action']
+            except: sysaction = ''
+        else:
+            sysaction = click
         isFolder = False if not sysaction == 'episodes' else True
 
         playbackMenu = control.lang(32063).encode('utf-8') if control.setting('hosts.mode') == '2' else control.lang(32064).encode('utf-8')
