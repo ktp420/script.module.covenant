@@ -34,6 +34,7 @@ class source:
         self.domains = ['cmovieshd.is']
         self.base_link = 'http://www.cmovieshd.is/'
         self.search_link = '?c=movie&m=filter&keyword=%s&per_page=%s'
+        self.search_link2 = '?c=movie&m=quickSearch&keyword=%s'
 
     def matchAlias(self, title, aliases):
         try:
@@ -80,23 +81,39 @@ class source:
             if url == None: return sources
             data = urlparse.parse_qs(url)
             data = dict([(i, data[i][0]) if data[i] else (i, '') for i in data])
-            title = data['tvshowtitle'] if 'tvshowtitle' in data else data['title']            
-            for p in {'','10','20','30','40','50'}:
-                query = self.search_link % (urllib.quote_plus(title), p)
-                query = urlparse.urljoin(self.base_link, query)          
-                cookie = '; approve_search=yes'          
-                result = client.request(query, cookie=cookie)
-                r = zip(client.parseDOM(result, 'a', ret='href', attrs={'class':'clip-link'}), client.parseDOM(result, 'a', ret='title', attrs={'class':'clip-link'}))
-                try:
-                    if 'episode' in data:            
-                        r = [i for i in r if cleantitle.get(title+'season%s'%data['season']) == cleantitle.get(i[1])][0][0]
-                    else:
-                        r = [i for i in r if cleantitle.get(title) == cleantitle.get(i[1]) and data['year'] in i[1]][0][0]
+            title = data['tvshowtitle'] if 'tvshowtitle' in data else data['title']
+            cookie = '; approve_search=yes'
+            query = self.search_link2 % (urllib.quote_plus(title))
+            query = urlparse.urljoin(self.base_link, query)
+            result = client.request(query, cookie=cookie)
+            try:
+                r = json.loads(result)
+                if 'episode' in data:            
+                    r = [i for i in r if cleantitle.get(title+'season%s'%data['season']) == cleantitle.get(i['title'])][0]
+                    r = urlparse.urljoin(self.base_link, '%s-season-%s-stream-%s.html'%(cleantitle.geturl(title), data['season'], r['id']))
+                else:
+                    r = [i for i in r if cleantitle.get(title) == cleantitle.get(i['title']) and data['year'] == i['year']][0]
+                    r = urlparse.urljoin(self.base_link, '%s-stream-%s.html'%(cleantitle.geturl(title), r['id']))
 
-                    break
-                except:
-                    if p == '50': raise Exception
-                    else: pass
+                r = client.request(r, output='geturl')
+                if r == None: raise Exception()
+
+            except:                           
+                for p in {'','10','20','30','40','50'}:
+                    query = self.search_link % (urllib.quote_plus(title), p)
+                    query = urlparse.urljoin(self.base_link, query)     
+                    result = client.request(query, cookie=cookie)
+                    r = zip(client.parseDOM(result, 'a', ret='href', attrs={'class':'clip-link'}), client.parseDOM(result, 'a', ret='title', attrs={'class':'clip-link'}))
+                    try:
+                        if 'episode' in data:            
+                            r = [i for i in r if cleantitle.get(title+'season%s'%data['season']) == cleantitle.get(i[1])][0][0]
+                        else:
+                            r = [i for i in r if cleantitle.get(title) == cleantitle.get(i[1]) and data['year'] in i[1]][0][0]
+
+                        break
+                    except:
+                        if p == '50': raise Exception
+                        else: pass
                 
             
             url = r if 'http' in r else urlparseF.urljoin(self.base_link, r)
@@ -105,19 +122,33 @@ class source:
             id = re.compile('id=(\d+)').findall(url)[0]
                       
             if 'episode' in data:
-                post = {'id': id, 'e': data['episode'], 'lang': '3', 'cat': 'episode'}          
+                post = {'id': id, 'e': data['episode'], 'lang': '3', 'cat': 'episode'}               
                                   
             else:
-                post = {'id': id, 'e': '', 'lang': '3', 'cat': 'movie'}                
+                post = {'id': id, 'e': '', 'lang': '3', 'cat': 'movie'} 
+                
 
             url = "%s://%s/embed/movieStreams?"%(urlparse.urlsplit(url)[0],urlparse.urlsplit(url)[1]) + urllib.urlencode(post) 
             result = client.request(url, post={})
-            links = re.findall(r'show_player\(.*?,.*?"([^"\\]+)',result)
+            result = client.parseDOM(result, 'div', attrs={'id':'streams'})
+            links = re.findall(r'show_player\(.*?,.*?"([^"\\]+)',result[0])
+            links.extend(re.findall(r'href=\'(http.*embed.*?)\'',result[0]))
+            
+            qualies = re.findall(r"class='quality_title'\s+style=''>(?:<mark>(.*?))?<",result[0])
+            qualies = qualies if len(qualies) == len(links) else ['SD']*len(links)
+            try: 
+                links = zip(links, qualies) 
+            except: 
+                pass
 
             sources = []
             i = 0
-            for url in links:
-                if i == 10: break
+            for link in links:
+                if i == 20: break
+                url = link[0]
+                q = link[1] if link[1] != '' else 'SD'
+                q = q if re.search(r'\d+',q) == None else source_utils.label_to_quality(q)
+
                 try:
                     if 'google' in url:
                         valid, hoster = source_utils.is_host_valid(url, hostDict)
@@ -126,7 +157,8 @@ class source:
              
                     else:
                         valid, hoster = source_utils.is_host_valid(url, hostDict)
-                        sources.append({'source': hoster, 'quality': 'SD', 'language': 'en', 'url': url, 'direct': False, 'debridonly': False})
+                        if not valid: continue
+                        sources.append({'source': hoster, 'quality': q, 'language': 'en', 'url': url, 'direct': False, 'debridonly': False})
                     i+=1
 
                 except:
