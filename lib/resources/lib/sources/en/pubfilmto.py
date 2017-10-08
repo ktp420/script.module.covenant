@@ -80,13 +80,13 @@ class source:
         try:
             url = urlparse.urljoin(self.base_link, self.tvsearch_link) % (urllib.quote_plus(titles[0]))
             url2 = urlparse.urljoin(self.base_link, self.tvsearch_link_2) % (urllib.quote_plus(titles[0]))
-            result = client.request(url)
+            cookie = '; approve_search=yes'   
+            result = client.request(url,  cookie=cookie)
             if season <> '0':
                 try:
                     id = [j['id'] for j in json.loads(result) if str.upper(str(j['title'])) == str.upper(titles[0] + ' - Season ' + season) ]
                     page = '%s-season-%s-stream-%s.html' % (str.replace(titles[0],' ','-'), season, id[0])
-                except:
-                     cookie = '; approve_search=yes'          
+                except:       
                      result = client.request(url2, cookie=cookie)
                      result = client.parseDOM(result, 'div', attrs={'class': 'recent-item'})
                      page = [re.findall(r'class=\'title_new\'>.*?Season\s+%s.*?<.*?href="([^"]+)">'%season, r, re.DOTALL) for r in result if bool(re.search(r'class=\'title_new\'>.*?Season\s+%s.*?<'%season, r, re.DOTALL))][0][0]
@@ -95,8 +95,7 @@ class source:
                 try:
                     id = [j['id'] for j in json.loads(result) if str.upper(str(j['title'])) == str.upper(titles[0]) and j['year'] == year ]
                     page = '%s-stream-%s.html' % (str.replace(titles[0],' ','-'), id[0])
-                except:
-                    cookie = '; approve_search=yes'          
+                except:       
                     result = client.request(url2, cookie=cookie)
                     result = client.parseDOM(result, 'div', attrs={'class': 'recent-item'})
                     page = [re.findall(r'class=\'title_new\'>.*?\(%s\).*?href="([^"]+)"' % year, r, re.DOTALL) for r in result if bool(re.search(r'class=\'title_new\'>.*?\(%s\)'%year, r, re.DOTALL))][0][0]
