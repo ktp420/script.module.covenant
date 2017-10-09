@@ -67,7 +67,7 @@ class sources:
                 if select == '1' and 'plugin' in control.infoLabel('Container.PluginName'):
                     control.window.clearProperty(self.itemProperty)
                     control.window.setProperty(self.itemProperty, json.dumps(items))
-
+                    
                     control.window.clearProperty(self.metaProperty)
                     control.window.setProperty(self.metaProperty, meta)
 
@@ -404,10 +404,25 @@ class sources:
 
                 if quality == 'AUTO': 
                     u = self.sourcesDirect(items)
-                else: 
-                    u = self.sourcesDialog(items, addon_name='Bennu')
+                    return u
+                else:
+                    meta = '{"title": "%s", "year": "%s", "imdb": "%s"}' % (title, year, imdb)
+                    '''control.window.clearProperty("plugin.video.bennu.container.items")
+                    control.window.setProperty("plugin.video.bennu.container.items", json.dumps(items))
+                    
+                    control.window.clearProperty("plugin.video.bennu.container.meta")
+                    control.window.setProperty("plugin.video.bennu.container.meta", meta)'''
+                    control.window.clearProperty(self.itemProperty)
+                    control.window.setProperty(self.itemProperty, json.dumps(items))
+                    
+                    control.window.clearProperty(self.metaProperty)
+                    control.window.setProperty(self.metaProperty, meta)
 
-                return u   
+                    control.sleep(200)
+                    control.execute('Container.Update(%s?action=addItem&title=%s)' % (sys.argv[0], urllib.quote_plus(title)))
+
+                    return "DIR"
+
             except:
                 try: progressDialog.close()
                 except: pass
