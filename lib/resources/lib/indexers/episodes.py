@@ -577,7 +577,7 @@ class episodes:
             pass
 
 
-    def calendar(self, url, click=None):
+    def calendar(self, url):
         try:
             try: url = getattr(self, url + '_link')
             except: pass
@@ -611,7 +611,7 @@ class episodes:
                 self.list = cache.get(self.tvmaze_list, 1, url, False)
 
 
-            self.episodeDirectory(self.list, click)
+            self.episodeDirectory(self.list)
             return self.list
         except:
             pass
@@ -624,11 +624,11 @@ class episodes:
             setting = control.setting('tv.widget')
 
         if setting == '2':
-            self.calendar(self.progress_link, 'play')
+            self.calendar(self.progress_link)
         elif setting == '3':
-            self.calendar(self.mycalendar_link, 'play')
+            self.calendar(self.mycalendar_link)
         else:
-            self.calendar(self.added_link, 'play')
+            self.calendar(self.added_link)
 
 
     def calendars(self, idx=True):
@@ -1357,7 +1357,7 @@ class episodes:
         return itemlist
 
 
-    def episodeDirectory(self, items, click=None):
+    def episodeDirectory(self, items):
         if items == None or len(items) == 0: control.idle() ; sys.exit()
 
         sysaddon = sys.argv[0]
@@ -1382,11 +1382,9 @@ class episodes:
         multi = len([x for y,x in enumerate(multi) if x not in multi[:y]])
         multi = True if multi > 1 else False
 
-        if click == None:
-            try: sysaction = items[0]['action']
-            except: sysaction = ''
-        else:
-            sysaction = click
+        try: sysaction = items[0]['action']
+        except: sysaction = ''
+
         isFolder = False if not sysaction == 'episodes' else True
 
         playbackMenu = control.lang(32063).encode('utf-8') if control.setting('hosts.mode') == '2' else control.lang(32064).encode('utf-8')
