@@ -18,7 +18,7 @@
 '''
 
 
-import sys,re,json,urllib,urlparse,random,datetime,time
+import xbmc,sys,re,json,urllib,urlparse,random,datetime,time
 
 from resources.lib.modules import trakt
 from resources.lib.modules import tvmaze
@@ -302,6 +302,8 @@ class sources:
         self.prepareSources()
 
         sourceDict = self.sourceDict
+        
+        progressDialog.update(0, control.lang(32588).encode('utf-8'))
 
         content = 'movie' if tvshowtitle == None else 'episode'
         if content == 'movie':
@@ -310,6 +312,8 @@ class sources:
         else:
             sourceDict = [(i[0], i[1], getattr(i[1], 'tvshow', None)) for i in sourceDict]
             genres = trakt.getGenre('show', 'tvdb', tvdb)
+        
+        progressDialog.update(0, control.lang(32589).encode('utf-8'))
 
         sourceDict = [(i[0], i[1], i[2]) for i in sourceDict if not hasattr(i[1], 'genre_filter') or not i[1].genre_filter or any(x in i[1].genre_filter for x in genres)]
         sourceDict = [(i[0], i[1]) for i in sourceDict if not i[2] == None]
@@ -450,12 +454,23 @@ class sources:
 
 
     def getMovieSource(self, title, localtitle, aliases, year, imdb, source, call):
+    
         try:
             dbcon = database.connect(self.sourceFile)
             dbcur = dbcon.cursor()
         except:
             pass
 
+        ''' Fix to stop items passed with a 0 IMDB id pulling old unrelated sources from the database. '''
+        if imdb == '0':
+            try:
+                dbcur.execute("DELETE FROM rel_src WHERE source = '%s' AND imdb_id = '%s' AND season = '%s' AND episode = '%s'" % (source, imdb, '', ''))
+                dbcur.execute("DELETE FROM rel_url WHERE source = '%s' AND imdb_id = '%s' AND season = '%s' AND episode = '%s'" % (source, imdb, '', ''))
+                dbcon.commit()
+            except:
+                pass
+        ''' END '''
+        
         try:
             sources = []
             dbcur.execute("SELECT * FROM rel_src WHERE source = '%s' AND imdb_id = '%s' AND season = '%s' AND episode = '%s'" % (source, imdb, '', ''))
@@ -634,7 +649,18 @@ class sources:
             valid_hoster = [i for i in valid_hoster if d.valid_url('', i)]
             filter += [dict(i.items() + [('debrid', d.name)]) for i in self.sources if i['source'] in valid_hoster]
         filter += [i for i in self.sources if not i['source'].lower() in self.hostprDict and i['debridonly'] == False]
+
         self.sources = filter
+      
+        for i in range(len(self.sources)):
+            q = self.sources[i]['quality']
+            u = self.sources[i]['url']
+            
+            if q == 'SD': 
+                q = source_utils.check_sd_url(u)
+                self.sources[i].update({'quality': q})
+            if q == 'HD': self.sources[i].update({'quality': '720p'})
+        
 
         filter = []
         filter += local
@@ -642,17 +668,17 @@ class sources:
         if quality in ['0']: filter += [i for i in self.sources if i['quality'] == '4K' and 'debrid' in i]
         if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and 'debrid' in i]
         if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and 'debrid' in i]
-        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == 'HD' and 'debrid' in i]
+        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and 'debrid' in i]
 
         if quality in ['0']: filter += [i for i in self.sources if i['quality'] == '4K' and not 'debrid' in i and 'memberonly' in i]
         if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and not 'debrid' in i and 'memberonly' in i]
         if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and not 'debrid' in i and 'memberonly' in i]
-        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == 'HD' and not 'debrid' in i and 'memberonly' in i]
+        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and not 'debrid' in i and 'memberonly' in i]
 
         if quality in ['0']: filter += [i for i in self.sources if i['quality'] == '4K' and not 'debrid' in i and not 'memberonly' in i]
         if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and not 'debrid' in i and not 'memberonly' in i]
         if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and not 'debrid' in i and not 'memberonly' in i]
-        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == 'HD' and not 'debrid' in i and not 'memberonly' in i]
+        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and not 'debrid' in i and not 'memberonly' in i]
 
         filter += [i for i in self.sources if i['quality'] in ['SD', 'SCR', 'CAM']]
         self.sources = filter
@@ -663,17 +689,22 @@ class sources:
 
         filter = [i for i in self.sources if i['source'].lower() in self.hostblockDict and not 'debrid' in i]
         self.sources = [i for i in self.sources if not i in filter]
-
+        
         multi = [i['language'] for i in self.sources]
         multi = [x for y,x in enumerate(multi) if x not in multi[:y]]
         multi = True if len(multi) > 1 else False
 
         if multi == True:
             self.sources = [i for i in self.sources if not i['language'] == 'en'] + [i for i in self.sources if i['language'] == 'en']
-
-        self.sources = self.sources[:2000]
         
+        self.sources = self.sources[:2000]
+
+        extra_info = control.setting('sources.extrainfo')
         for i in range(len(self.sources)):
+        
+            if extra_info == 'true': t = source_utils.getFileType(self.sources[i]['url'])
+            else: t = None
+            
             u = self.sources[i]['url']
 
             p = self.sources[i]['provider']
@@ -681,9 +712,6 @@ class sources:
             q = self.sources[i]['quality']
 
             s = self.sources[i]['source']
-            
-            if q == 'SD': q = source_utils.check_sd_url(u)
-            self.sources[i].update({'quality': q})
             
             s = s.rsplit('.', 1)[0]
 
@@ -702,16 +730,22 @@ class sources:
             if multi == True and not l == 'en': label += '[B]%s[/B] | ' % l
 
             ### if q in ['4K', '1440p', '1080p', 'HD']: label += '%s | %s | [B][I]%s [/I][/B]' % (s, f, q)
-            if q in ['4K', '1440p', '1080p', 'HD']: label += '%s | [B][I]%s [/I][/B] | %s' % (s, q, f)
-            elif q == 'SD': label += '%s | %s' % (s, f)
-            else: label += '%s | %s | [I]%s [/I]' % (s, f, q)
+            if t:
+                if q in ['4K', '1440p', '1080p', '720p']: label += '%s | [B][I]%s [/I][/B] | [I]%s[/I] | %s' % (s, q, t, f)
+                elif q == 'SD': label += '%s | %s | [I]%s[/I]' % (s, f, t)
+                else: label += '%s | %s | [I]%s [/I] | [I]%s[/I]' % (s, f, q, t)
+            else:
+                if q in ['4K', '1440p', '1080p', '720p']: label += '%s | [B][I]%s [/I][/B] | %s' % (s, q, f)
+                elif q == 'SD': label += '%s | %s' % (s, f)
+                else: label += '%s | %s | [I]%s [/I]' % (s, f, q)
             label = label.replace('| 0 |', '|').replace(' | [I]0 [/I]', '')
-            label = label.replace('[I]HEVC [/I]', 'HEVC')
+            #label = label.replace('[I]HEVC [/I]', 'HEVC')
             label = re.sub('\[I\]\s+\[/I\]', ' ', label)
             label = re.sub('\|\s+\|', '|', label)
             label = re.sub('\|(?:\s+|)$', '', label)
 
-            self.sources[i]['label'] = label.upper()
+            if d: self.sources[i]['label'] = '[COLOR deepskyblue]' + label.upper() + '[/COLOR]'
+            else: self.sources[i]['label'] = label.upper()
 
         try: 
             if not HEVC == 'true': self.sources = [i for i in self.sources if not 'HEVC' in i['label']]
