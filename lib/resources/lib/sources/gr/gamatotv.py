@@ -28,7 +28,7 @@ from resources.lib.modules import dom_parser
 
 class source:
     def __init__(self):
-        self.priority = 2
+        self.priority = 1
         self.language = ['gr']
         self.domains = ['gamatotv.me']
         self.base_link = 'http://gamatotv.me/'
