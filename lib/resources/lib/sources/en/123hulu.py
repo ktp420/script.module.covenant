@@ -72,7 +72,6 @@ class source:
                 try:
                     host = i[1]
                     if str(host) in str(hostDict):
-                        print 'here'
                         host = client.replaceHTMLCodes(host)
                         host = host.encode('utf-8')
                         sources.append({
