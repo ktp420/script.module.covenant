@@ -653,31 +653,26 @@ class sources:
         self.sources = filter
       
         for i in range(len(self.sources)):
-            q = self.sources[i]['quality']
-            u = self.sources[i]['url']
-            
-            if q == 'SD': 
-                q = source_utils.check_sd_url(u)
-                self.sources[i].update({'quality': q})
+            q = self.sources[i]['quality']            
             if q == 'HD': self.sources[i].update({'quality': '720p'})
-        
 
         filter = []
         filter += local
 
         if quality in ['0']: filter += [i for i in self.sources if i['quality'] == '4K' and 'debrid' in i]
-        if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and 'debrid' in i]
-        if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and 'debrid' in i]
-        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and 'debrid' in i]
-
         if quality in ['0']: filter += [i for i in self.sources if i['quality'] == '4K' and not 'debrid' in i and 'memberonly' in i]
-        if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and not 'debrid' in i and 'memberonly' in i]
-        if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and not 'debrid' in i and 'memberonly' in i]
-        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and not 'debrid' in i and 'memberonly' in i]
-
         if quality in ['0']: filter += [i for i in self.sources if i['quality'] == '4K' and not 'debrid' in i and not 'memberonly' in i]
+
+        if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and 'debrid' in i]
+        if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and not 'debrid' in i and 'memberonly' in i]
         if quality in ['0', '1']: filter += [i for i in self.sources if i['quality'] == '1440p' and not 'debrid' in i and not 'memberonly' in i]
+
+        if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and 'debrid' in i]
+        if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and not 'debrid' in i and 'memberonly' in i]
         if quality in ['0', '1', '2']: filter += [i for i in self.sources if i['quality'] == '1080p' and not 'debrid' in i and not 'memberonly' in i]
+
+        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and 'debrid' in i]
+        if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and not 'debrid' in i and 'memberonly' in i]
         if quality in ['0', '1', '2', '3']: filter += [i for i in self.sources if i['quality'] == '720p' and not 'debrid' in i and not 'memberonly' in i]
 
         filter += [i for i in self.sources if i['quality'] in ['SD', 'SCR', 'CAM']]
@@ -700,6 +695,10 @@ class sources:
         self.sources = self.sources[:2000]
 
         extra_info = control.setting('sources.extrainfo')
+        prem_identify = control.setting('prem.identify')
+        if prem_identify == '': prem_identify = 'blue'
+        prem_identify = self.getPremColor(prem_identify)
+        
         for i in range(len(self.sources)):
         
             if extra_info == 'true': t = source_utils.getFileType(self.sources[i]['url'])
@@ -744,7 +743,10 @@ class sources:
             label = re.sub('\|\s+\|', '|', label)
             label = re.sub('\|(?:\s+|)$', '', label)
 
-            if d: self.sources[i]['label'] = '[COLOR deepskyblue]' + label.upper() + '[/COLOR]'
+            if d: 
+                if not prem_identify == 'nocolor':
+                    self.sources[i]['label'] = ('[COLOR %s]' % (prem_identify)) + label.upper() + '[/COLOR]'
+                else: self.sources[i]['label'] = label.upper()
             else: self.sources[i]['label'] = label.upper()
 
         try: 
@@ -1018,3 +1020,17 @@ class sources:
         self.hosthqDict = ['gvideo', 'google.com', 'openload.io', 'openload.co', 'oload.tv', 'thevideo.me', 'rapidvideo.com', 'raptu.com', 'filez.tv', 'uptobox.com', 'uptobox.com', 'uptostream.com', 'xvidstage.com', 'streamango.com']
 
         self.hostblockDict = []
+
+    def getPremColor(self, n):
+        if n == '0': n = 'blue'
+        elif n == '1': n = 'red'
+        elif n == '2': n = 'yellow'
+        elif n == '3': n = 'deeppink'
+        elif n == '4': n = 'cyan'
+        elif n == '5': n = 'lawngreen'
+        elif n == '6': n = 'gold'
+        elif n == '7': n = 'magenta'
+        elif n == '8': n = 'yellowgreen'
+        elif n == '9': n = 'nocolor'
+        else: n == 'blue'
+        return n
