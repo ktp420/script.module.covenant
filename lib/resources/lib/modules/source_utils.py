@@ -79,13 +79,46 @@ def get_release_quality(release_name, release_link=None):
     except:
         return 'SD', []
         
+def getFileType(url):
+
+    try: url = url.lower()
+    except: url = str(url)
+    type = ''
+    
+    if 'bluray' in url: type += ' BLURAY /'
+    if '.web-dl' in url: type += ' WEB-DL /'
+    if '.web.' in url: type += ' WEB-DL /'
+    if 'hdrip' in url: type += ' HDRip /'
+    if 'bd-r' in url: type += ' BD-R /'
+    if 'bd-rip' in url: type += ' BD-RIP /'
+    if 'bd.r' in url: type += ' BD-R /'
+    if 'bd.rip' in url: type += ' BD-RIP /'
+    if 'bdr' in url: type += ' BD-R /'
+    if 'bdrip' in url: type += ' BD-RIP /'
+    if 'atmos' in url: type += ' ATMOS /'
+    if 'truehd' in url: type += ' TRUEHD /'
+    if '.dd' in url: type += ' DolbyDigital /'
+    if '5.1' in url: type += ' 5.1 /'
+    if '.xvid' in url: type += ' XVID /'
+    if '.mp4' in url: type += ' MP4 /'
+    if '.avi' in url: type += ' AVI /'
+    if 'ac3' in url: type += ' AC3 /'
+    if 'h.264' in url: type += ' H.264 /'
+    if '.x264' in url: type += ' x264 /'
+    if '.x265' in url: type += ' x265 /'
+    if 'subs' in url: 
+        if type != '': type += ' - WITH SUBS'
+        else: type = 'SUBS'
+    type = type.rstrip('/')
+    return type
+
 def check_sd_url(release_link):
 
     try:
         release_link = release_link.lower()
         if '1080' in release_link: quality = '1080p'
-        elif '720' in release_link: quality = 'HD'
-        elif '.hd' in release_link: quality = 'HD'
+        elif '720' in release_link: quality = '720p'
+        elif '.hd' in release_link: quality = '720p'
         elif any(i in ['dvdscr', 'r5', 'r6'] for i in release_link): quality = 'SCR'
         elif any(i in ['camrip', 'tsrip', 'hdcam', 'hdts', 'dvdcam', 'dvdts', 'cam', 'telesync', 'ts'] for i in release_link): quality = 'CAM'
         else: quality = 'SD'
@@ -105,7 +138,7 @@ def label_to_quality(label):
         elif label >= 1080:
             return '1080p'
         elif 720 <= label < 1080:
-            return 'HD'
+            return '720p'
         elif label < 720:
             return 'SD'
     except:
