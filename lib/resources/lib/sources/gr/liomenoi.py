@@ -104,11 +104,10 @@ class source:
             query = urlparse.urljoin(self.base_link, url)
             r = client.request(query)
             links = client.parseDOM(r, 'tbody')
-            links = [client.parseDOM(i, 'a',  ret='href') for i in links]
+            links = client.parseDOM(links, 'a',  ret='href')
+            for i in range(len(links)):
 
-            for i in range(len(links[0])):
-
-                url = links[0][i]
+                url = links[i]
                 if 'target' in url: continue
                 data = client.request(url)
                 url = client.parseDOM(data, 'iframe', ret='src')[0]
@@ -123,6 +122,8 @@ class source:
                 quality = 'SD'
                 lang, info = 'gr', 'SUB'
                 valid, host = source_utils.is_host_valid(url, hostDict)
+                if 'hdvid' in host: valid = True
+                if not valid: continue
 
                 sources.append({'source': host, 'quality': quality, 'language': lang, 'url': url, 'info': info,
                                 'direct':False,'debridonly': False})

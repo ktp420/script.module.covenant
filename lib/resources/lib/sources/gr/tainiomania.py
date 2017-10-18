@@ -23,6 +23,7 @@ from resources.lib.modules import cleantitle
 from resources.lib.modules import client
 from resources.lib.modules import source_utils
 from resources.lib.modules import dom_parser
+from resources.lib.modules import trakt
 
 
 
@@ -39,6 +40,7 @@ class source:
             url = self.__search([localtitle] + source_utils.aliases_to_array(aliases), year)
             if not url and title != localtitle: url = self.__search([title] + source_utils.aliases_to_array(
                 aliases),year)
+            if not url: url = self.__search(trakt.getMovieTranslation(imdb, 'el'), year)
             return url
         except:
             return
@@ -59,7 +61,8 @@ class source:
                 title = re.findall('alt="(.+?)"',i[1], re.DOTALL)[0]
                 y = re.findall('(\d{4})', title, re.DOTALL)[0]
                 title = re.sub('<\w+>|</\w+>','',title)
-                title = cleantitle.get_simple(title)
+                title = cleantitle.get(title)
+                title = re.findall('(\w+)', cleantitle.get(title))[0]
 
                 if title in t and year == y:
                     url = re.findall('href="(.+?)"',i[1], re.DOTALL)[0]
@@ -82,10 +85,11 @@ class source:
             url = re.findall('file:"([^"]+)"', data, re.DOTALL)[0]
             quality = 'SD'
             lang, info = 'gr', 'SUB'
-            valid, host = source_utils.is_host_valid(url, hostDict)
+            if url.endswith('.mp4'): direct = True
+            else: direct = False
 
-            sources.append({'source': host, 'quality': quality, 'language': lang, 'url': url, 'info': info,
-                            'direct':False,'debridonly': False})
+            sources.append({'source': 'tainiomania', 'quality': quality, 'language': lang, 'url': url, 'info': info,
+                            'direct':direct,'debridonly': False})
 
             return sources
         except:
