@@ -118,7 +118,7 @@ def check_sd_url(release_link):
         release_link = release_link.lower()
         if '1080' in release_link: quality = '1080p'
         elif '720' in release_link: quality = '720p'
-        elif '.hd' in release_link: quality = '720p'
+        elif '.hd.' in release_link: quality = '720p'
         elif any(i in ['dvdscr', 'r5', 'r6'] for i in release_link): quality = 'SCR'
         elif any(i in ['camrip', 'tsrip', 'hdcam', 'hdts', 'dvdcam', 'dvdts', 'cam', 'telesync', 'ts'] for i in release_link): quality = 'CAM'
         else: quality = 'SD'
