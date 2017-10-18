@@ -23,6 +23,8 @@ from resources.lib.modules import cleantitle
 from resources.lib.modules import client
 from resources.lib.modules import source_utils
 from resources.lib.modules import dom_parser
+from resources.lib.modules import trakt
+from resources.lib.modules import tvmaze
 
 
 
@@ -37,12 +39,11 @@ class source:
     def movie(self, imdb, title, localtitle, aliases, year):
         try:
             url = self.__search([localtitle] + source_utils.aliases_to_array(aliases), year)
-            if not url and title != localtitle: url = self.__search([title] + source_utils.aliases_to_array(
-                aliases),year)
+            if not url and title != localtitle: url = self.__search([title] + source_utils.aliases_to_array(aliases),year)
+            if not url: url = self.__search(self.search_link + trakt.getMovieTranslation(imdb, 'el'), year)
             return url
         except:
             return
-
 
     def __search(self, titles, year):
         try:
@@ -61,13 +62,13 @@ class source:
                 r = dom_parser.parse_dom(r, 'a')
                 title = r[0][1]
                 y = re.findall('(\d{4})', title, re.DOTALL)[0]
-                title = cleantitle.get(title)
+                title = cleantitle.get(title.split('(')[0])
+
                 if title in t and year == y:
                     return source_utils.strip_domain(r[0][0]['href'])
             return
         except:
             return
-
 
     def sources(self, url, hostDict, hostprDict):
         sources = []
@@ -87,15 +88,15 @@ class source:
                 quality = 'SD'
                 lang, info = 'gr', 'SUB'
                 valid, host = source_utils.is_host_valid(url, hostDict)
-                if valid:
+                if 'hdvid' in host: valid = True
+                if not valid: continue
 
-                    sources.append({'source': host, 'quality': quality, 'language': lang, 'url': url, 'info': info,
-                                    'direct':False,'debridonly': False})
+                sources.append({'source': host, 'quality': quality, 'language': lang, 'url': url, 'info': info,
+                                'direct':False,'debridonly': False})
 
             return sources
         except:
             return sources
-
 
     def resolve(self, url):
         return url
