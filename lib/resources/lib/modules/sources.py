@@ -303,7 +303,7 @@ class sources:
 
         sourceDict = self.sourceDict
         
-        progressDialog.update(0, control.lang(32588).encode('utf-8'))
+        progressDialog.update(0, control.lang(32599).encode('utf-8'))
 
         content = 'movie' if tvshowtitle == None else 'episode'
         if content == 'movie':
@@ -313,7 +313,7 @@ class sources:
             sourceDict = [(i[0], i[1], getattr(i[1], 'tvshow', None)) for i in sourceDict]
             genres = trakt.getGenre('show', 'tvdb', tvdb)
         
-        progressDialog.update(0, control.lang(32589).encode('utf-8'))
+        progressDialog.update(0, control.lang(32600).encode('utf-8'))
 
         sourceDict = [(i[0], i[1], i[2]) for i in sourceDict if not hasattr(i[1], 'genre_filter') or not i[1].genre_filter or any(x in i[1].genre_filter for x in genres)]
         sourceDict = [(i[0], i[1]) for i in sourceDict if not i[2] == None]
