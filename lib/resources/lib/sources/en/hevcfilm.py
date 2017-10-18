@@ -122,6 +122,7 @@ class source:
                     url = url.encode('utf-8')
 
                     valid, host = source_utils.is_host_valid(url, hostDict)
+                    if not valid: continue
                     host = client.replaceHTMLCodes(host)
                     host = host.encode('utf-8')
 
