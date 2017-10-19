@@ -359,7 +359,12 @@ class sources:
 
         try: timeout = int(control.setting('scrapers.timeout.1'))
         except: pass
-
+        
+        source_4k = 0
+        source_1080 = 0
+        source_720 = 0
+        source_sd = 0
+        
         for i in range(0, 4 * timeout):
             try:
                 if xbmc.abortRequested == True: return sys.exit()
@@ -369,12 +374,18 @@ class sources:
                 except:
                     pass
 
+                if len(self.sources) > 0:
+                    source_4k = len([e for e in self.sources if e['quality'] == '4K'])
+                    source_1080 = len([e for e in self.sources if e['quality'] in ['1440p','1080p']])
+                    source_720 = len([e for e in self.sources if e['quality'] in ['720p','HD']])
+                    source_sd = len([e for e in self.sources if e['quality'] == 'SD'])
+                    
                 if (i / 2) < timeout:
                     try:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
                         if i >= timeout and len(mainleft) == 0 and len(self.sources) >= 100 * len(info): break # improve responsiveness
-                        line1 = 'Sources found: %s' % (len(self.sources))
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k, source_1080, source_720, source_sd, len(self.sources))
                         if len(info) > 6: line2 = string3 % (str(len(info)))
                         elif len(info) > 0: line2 = string3 % (', '.join(info))
                         else: break
@@ -386,7 +397,7 @@ class sources:
                     try:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = mainleft
-                        line1 = 'Sources found: %s' % (len(self.sources))
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k, source_1080, source_720, source_sd, len(self.sources))
                         if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
                         elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
                         else: break
