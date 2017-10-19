@@ -360,7 +360,7 @@ class sources:
         try: timeout = int(control.setting('scrapers.timeout.1'))
         except: pass
 
-        for i in range(0, 2 * max(timeout, 30)):
+        for i in range(0, 4 * timeout):
             try:
                 if xbmc.abortRequested == True: return sys.exit()
 
