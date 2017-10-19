@@ -378,7 +378,8 @@ class sources:
                         if len(info) > 6: line2 = string3 % (str(len(info)))
                         elif len(info) > 0: line2 = string3 % (', '.join(info))
                         else: break
-                        progressDialog.update(min(100, int(100 * (float(i) / 2) / timeout + 0.5)), line1, line2)
+                        percent = int(100 * float(i) / (2 * timeout) + 0.5)
+                        progressDialog.update(max(1, percent), line1, line2)
                     except:
                         pass
                 else:
@@ -389,7 +390,8 @@ class sources:
                         if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
                         elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
                         else: break
-                        progressDialog.update(100, line1, line2)
+                        percent = int(100 * float(i) / (2 * timeout) + 0.5) % 100
+                        progressDialog.update(max(1, percent), line1, line2)
                     except:
                         break
 
