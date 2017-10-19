@@ -371,7 +371,9 @@ class sources:
 
                 if (i / 2) < timeout:
                     try:
+                        mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
+                        if len(mainleft) == 0 and len(info) <= 2 and len(self.sources) > 99: break # improve responsiveness
                         line1 = 'Sources found: %s' % (len(self.sources))
                         if len(info) > 6: line2 = string3 % (str(len(info)))
                         elif len(info) > 0: line2 = string3 % (', '.join(info))
