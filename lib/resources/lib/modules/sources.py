@@ -328,6 +328,9 @@ class sources:
 
         sourceDict = [(i[0], i[1], i[1].priority) for i in sourceDict]
 
+        random.shuffle(sourceDict)
+        sourceDict = sorted(sourceDict, key=lambda i: i[2])
+
         threads = []
 
         if content == 'movie':
@@ -357,33 +360,40 @@ class sources:
         try: timeout = int(control.setting('scrapers.timeout.1'))
         except: pass
 
-        for i in range(0, (timeout * 2) + 60):
+        for i in range(0, 4 * timeout):
             try:
                 if xbmc.abortRequested == True: return sys.exit()
-
-                try: info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
-                except: info = []
-
-                timerange = int(i * 0.5)
 
                 try:
                     if progressDialog.iscanceled(): break
                 except:
                     pass
-                try:
-                    string4 = string1 % str(timerange)
-                    if len(info) > 5: string5 = string3 % str(len(info))
-                    else: string5 = string3 % str(info).translate(None, "[]'")
-                    progressDialog.update(int((100 / float(len(threads))) * len([x for x in threads if x.is_alive() == False])), str(string4), str(string5))
-                except:
-                    pass
 
-                is_alive = [x.is_alive() for x in threads]
-                if all(x == False for x in is_alive): break
-
-                if timerange >= timeout:
-                    is_alive = [x for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
-                    if not is_alive: break
+                if (i / 2) < timeout:
+                    try:
+                        mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
+                        info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
+                        if i >= timeout and len(mainleft) == 0 and len(self.sources) >= 100 * len(info): break # improve responsiveness
+                        line1 = 'Sources found: %s' % (len(self.sources))
+                        if len(info) > 6: line2 = string3 % (str(len(info)))
+                        elif len(info) > 0: line2 = string3 % (', '.join(info))
+                        else: break
+                        percent = int(100 * float(i) / (2 * timeout) + 0.5)
+                        progressDialog.update(max(1, percent), line1, line2)
+                    except:
+                        pass
+                else:
+                    try:
+                        mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
+                        info = mainleft
+                        line1 = 'Sources found: %s' % (len(self.sources))
+                        if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
+                        elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
+                        else: break
+                        percent = int(100 * float(i) / (2 * timeout) + 0.5) % 100
+                        progressDialog.update(max(1, percent), line1, line2)
+                    except:
+                        break
 
                 time.sleep(0.5)
             except:
