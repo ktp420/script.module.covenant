@@ -372,21 +372,22 @@ class sources:
                 if (i / 2) < timeout:
                     try:
                         info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
-                        string4 = 'Sources Found: %s' % (len(self.sources))
-                        if len(info) > 5: string5 = string3 % (str(len(info)))
-                        elif len(info) > 0: string5 = string3 % (', '.join(info))
+                        line1 = 'Sources found: %s' % (len(self.sources))
+                        if len(info) > 6: line2 = string3 % (str(len(info)))
+                        elif len(info) > 0: line2 = string3 % (', '.join(info))
                         else: break
-                        progressDialog.update(min(100, int(100 * (float(i) / 2) / timeout + 0.5)), str(string4), str(string5))
+                        progressDialog.update(min(100, int(100 * (float(i) / 2) / timeout + 0.5)), line1, line2)
                     except:
                         pass
                 else:
                     try:
-                        info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
-                        string4 = 'Sources Found: %s' % (len(self.sources))
-                        if len(info) > 5: string5 = 'Waiting For: %s' % (str(len(info)))
-                        elif len(info) > 0: string5 = 'Waiting For: %s' % (', '.join(info))
+                        mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
+                        info = mainleft
+                        line1 = 'Sources found: %s' % (len(self.sources))
+                        if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
+                        elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
                         else: break
-                        progressDialog.update(100, str(string4), str(string5))
+                        progressDialog.update(100, line1, line2)
                     except:
                         break
 
