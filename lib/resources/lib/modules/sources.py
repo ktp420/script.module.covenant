@@ -380,12 +380,18 @@ class sources:
                     source_720 = len([e for e in self.sources if e['quality'] in ['720p','HD']])
                     source_sd = len([e for e in self.sources if e['quality'] == 'SD'])
                     
+                source_4k_label = '[COLOR red][B]%s[/B][/COLOR]' % source_4k if source_4k == 0 else '[COLOR lime][B]%s[/B][/COLOR]' % source_4k
+                source_1080_label = '[COLOR red][B]%s[/B][/COLOR]' % source_1080 if source_1080 == 0 else '[COLOR lime][B]%s[/B][/COLOR]' % source_1080
+                source_720_label = '[COLOR red][B]%s[/B][/COLOR]' % source_720 if source_720 == 0 else '[COLOR lime][B]%s[/B][/COLOR]' % source_720
+                source_sd_label = '[COLOR red][B]%s[/B][/COLOR]' % source_sd if source_sd == 0 else '[COLOR lime][B]%s[/B][/COLOR]' % source_sd
+                source_total_label = '[COLOR red][B]%s[/B][/COLOR]' % len(self.sources) if len(self.sources) == 0 else '[COLOR lime][B]%s[/B][/COLOR]' % len(self.sources)
+
                 if (i / 2) < timeout:
                     try:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
                         if i >= timeout and len(mainleft) == 0 and len(self.sources) >= 100 * len(info): break # improve responsiveness
-                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k, source_1080, source_720, source_sd, len(self.sources))
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, source_total_label)
                         if len(info) > 6: line2 = string3 % (str(len(info)))
                         elif len(info) > 0: line2 = string3 % (', '.join(info))
                         else: break
@@ -397,7 +403,7 @@ class sources:
                     try:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = mainleft
-                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k, source_1080, source_720, source_sd, len(self.sources))
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, source_total_label)
                         if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
                         elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
                         else: break
