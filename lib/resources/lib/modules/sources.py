@@ -105,6 +105,9 @@ class sources:
         meta = control.window.getProperty(self.metaProperty)
         meta = json.loads(meta)
 
+        # (Kodi bug?) [name,role] is incredibly slow on this directory, [name] is barely tolerable, so just nuke it for speed!
+        if 'cast' in meta: del(meta['cast'])
+
         sysaddon = sys.argv[0]
 
         syshandle = int(sys.argv[1])
