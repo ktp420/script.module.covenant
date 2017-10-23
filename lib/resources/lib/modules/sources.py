@@ -359,6 +359,8 @@ class sources:
         string1 = control.lang(32404).encode('utf-8')
         string2 = control.lang(32405).encode('utf-8')
         string3 = control.lang(32406).encode('utf-8')
+        string4 = control.lang(32601).encode('utf-8')
+        string5 = control.lang(32602).encode('utf-8')
 
         try: timeout = int(control.setting('scrapers.timeout.1'))
         except: pass
@@ -394,7 +396,7 @@ class sources:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
                         if i >= timeout and len(mainleft) == 0 and len(self.sources) >= 100 * len(info): break # improve responsiveness
-                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, source_total_label)
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  %s:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, str(string4), source_total_label)
                         if len(info) > 6: line2 = string3 % (str(len(info)))
                         elif len(info) > 0: line2 = string3 % (', '.join(info))
                         else: break
@@ -406,9 +408,9 @@ class sources:
                     try:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = mainleft
-                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, source_total_label)
-                        if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
-                        elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  %s:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, str(string4), source_total_label)
+                        if len(info) > 6: line2 = '%s: %s' % (str(string5), str(len(info)))
+                        elif len(info) > 0: line2 = '%s: %s' % (str(string5), ', '.join(info))
                         else: break
                         percent = int(100 * float(i) / (2 * timeout) + 0.5) % 100
                         progressDialog.update(max(1, percent), line1, line2)
