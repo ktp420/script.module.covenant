@@ -112,7 +112,6 @@ class source:
             if not url:
                 return sources
             if debrid.status() == False: raise Exception()
-
             links = self.links_found(url)
 
             hostdict = hostDict + hostprDict
