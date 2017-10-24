@@ -413,8 +413,8 @@ class sources:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = mainleft
                         line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  %s:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, str(string4), source_total_label)
-                        if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
-                        elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
+                        if len(info) > 6: line2 = '%s: %s' % (str(string5), str(len(info)))
+                        elif len(info) > 0: line2 = '%s: %s' % (str(string5), ', '.join(info))
                         else: break
                         percent = int(100 * float(i) / (2 * timeout) + 0.5) % 100
                         progressDialog.update(max(1, percent), line1, line2)
