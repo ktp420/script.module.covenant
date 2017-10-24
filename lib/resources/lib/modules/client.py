@@ -172,7 +172,12 @@ def request(url, close=True, redirect=True, error=False, proxy=None, post=None, 
             if close == True: response.close()
             return result
 
-
+        elif output == 'file_size':
+            try: content = int(response.headers['Content-Length'])
+            except: content = '0'
+            response.close()
+            return content
+        
         if limit == '0':
             result = response.read(224 * 1024)
         elif not limit == None:

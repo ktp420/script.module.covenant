@@ -28,14 +28,12 @@ from resources.lib.modules import directstream
 from resources.lib.modules import trakt
 from resources.lib.modules import pyaes
 
-
 def is_anime(content, type, type_id):
     try:
         r = trakt.getGenre(content, type, type_id)
         return 'anime' in r or 'animation' in r
     except:
         return False
-
 
 def get_release_quality(release_name, release_link=None):
 
@@ -144,7 +142,6 @@ def label_to_quality(label):
     except:
         return 'SD'
 
-
 def strip_domain(url):
     try:
         if url.lower().startswith('http') or url.startswith('/'):
@@ -160,10 +157,13 @@ def is_host_valid(url, domains):
     try:
         host = __top_domain(url)
         hosts = [domain.lower() for domain in domains if host and host in domain.lower()]
+
         if hosts and '.' not in host:
             host = hosts[0]
         if hosts and any([h for h in ['google', 'picasa', 'blogspot'] if h in host]):
             host = 'gvideo'
+        if hosts and any([h for h in ['akamaized','ocloud'] if h in host]):
+            host = 'CDN'
         return any(hosts), host
     except:
         return False, ''
@@ -178,7 +178,6 @@ def __top_domain(url):
     if res: domain = res.group(1)
     domain = domain.lower()
     return domain
-
 
 def aliases_to_array(aliases, filter=None):
     try:
@@ -195,7 +194,25 @@ def aliases_to_array(aliases, filter=None):
 def append_headers(headers):
     return '|%s' % '&'.join(['%s=%s' % (key, urllib.quote_plus(headers[key])) for key in headers])
 
+def get_size(url):
+    try:
+        size = client.request(url, output='file_size')
+        if size == '0': size = False
+        size = convert_size(size)
+        return size
+    except: return False
 
+def convert_size(size_bytes):
+   import math
+   if size_bytes == 0:
+       return "0B"
+   size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+   i = int(math.floor(math.log(size_bytes, 1024)))
+   p = math.pow(1024, i)
+   s = round(size_bytes / p, 2)
+   if size_name[i] == 'B' or size_name[i] == 'KB': return None
+   return "%s %s" % (s, size_name[i])
+   
 def check_directstreams(url, hoster='', quality='SD'):
     urls = []
     host = hoster
@@ -212,7 +229,10 @@ def check_directstreams(url, hoster='', quality='SD'):
     elif 'vk.com' in url:
         urls = directstream.vk(url)
         if urls: host = 'vk'
-
+    elif any(x in url for x in ['akamaized', 'blogspot', 'ocloud.stream']):
+        urls = [{'url': url}]
+        if urls: host = 'CDN'
+        
     direct = True if urls else False
 
     if not urls: urls = [{'quality': quality, 'url': url}]
