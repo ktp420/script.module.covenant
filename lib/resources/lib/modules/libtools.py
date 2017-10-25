@@ -332,8 +332,9 @@ class libtvshows:
             content = '%s?action=play&title=%s&year=%s&imdb=%s&tvdb=%s&season=%s&episode=%s&tvshowtitle=%s&date=%s' % (sys.argv[0], episodetitle, year, imdb, tvdb, season, episode, systitle, syspremiered)
 
             folder = lib_tools.make_path(self.library_folder, transtitle, year)
-            lib_tools.create_folder(folder)
-            lib_tools.write_file(os.path.join(folder, 'tvshow.nfo'), lib_tools.nfo_url('tv', i))
+            if not os.path.isfile(os.path.join(folder, 'tvshow.nfo')):
+                lib_tools.create_folder(folder)
+                lib_tools.write_file(os.path.join(folder, 'tvshow.nfo'), lib_tools.nfo_url('tv', i))
 
             folder = lib_tools.make_path(self.library_folder, transtitle, year, season)
             lib_tools.create_folder(folder)
