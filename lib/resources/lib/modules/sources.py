@@ -302,7 +302,9 @@ class sources:
 
     def getSources(self, title, year, imdb, tvdb, season, episode, tvshowtitle, premiered, quality='HD', timeout=30):
 
-        if control.progressDialogBG: control.progressDialogBG.close()
+        try:
+            if control.progressDialogBG: control.progressDialogBG.close()
+        except: pass
         
         progressDialog = control.progressDialog if control.setting('progress.dialog') == '0' else control.progressDialogBG
         progressDialog.create(control.addonInfo('name'), '')
