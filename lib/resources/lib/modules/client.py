@@ -19,7 +19,6 @@
 
 
 import re,sys,cookielib,urllib,urllib2,urlparse,gzip,StringIO,HTMLParser,time,random,base64
-import xbmc, xbmcgui
 
 from resources.lib.modules import cache
 from resources.lib.modules import workers
