@@ -200,6 +200,20 @@ def cache_clear_providers():
     except:
         pass
 
+def cache_clear_search():
+    try:
+        cursor = _get_connection_cursor_search()
+
+        for t in ['tvshow', 'movies']:
+            try:
+                cursor.execute("DROP TABLE IF EXISTS %s" % t)
+                cursor.execute("VACUUM")
+                cursor.commit()
+            except:
+                pass
+    except:
+        pass
+
 def cache_clear_all():
     cache_clear()
     cache_clear_meta()
@@ -235,6 +249,16 @@ def _get_connection_providers():
     conn.row_factory = _dict_factory
     return conn
     
+def _get_connection_cursor_search():
+    conn = _get_connection_search()
+    return conn.cursor()
+
+def _get_connection_search():
+    control.makeFile(control.dataPath)
+    conn = db.connect(control.searchFile)
+    conn.row_factory = _dict_factory
+    return conn
+
 def _dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):

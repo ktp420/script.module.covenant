@@ -117,6 +117,8 @@ providercacheFile = os.path.join(dataPath, 'providers.13.db')
 
 metacacheFile = os.path.join(dataPath, 'meta.5.db')
 
+searchFile = os.path.join(dataPath, 'search.1.db')
+
 libcacheFile = os.path.join(dataPath, 'library.db')
 
 cacheFile = os.path.join(dataPath, 'cache.db')

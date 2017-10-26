@@ -265,9 +265,10 @@ class player(xbmc.Player):
         if control.setting('crefresh') == 'true':
             xbmc.executebuiltin('Container.Refresh')
 
-        if (self.currentTime / self.totalTime) >= .90:
-            self.libForPlayback()
-
+        try:
+            if (self.currentTime / self.totalTime) >= .90:
+                self.libForPlayback()
+        except: pass
 
     def onPlayBackEnded(self):
         self.libForPlayback()
