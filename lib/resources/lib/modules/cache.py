@@ -200,6 +200,20 @@ def cache_clear_providers():
     except:
         pass
 
+def cache_clear_search():
+    try:
+        cursor = _get_connection_cursor_search()
+
+        for t in ['tvshow', 'movies']:
+            try:
+                cursor.execute("DROP TABLE IF EXISTS %s" % t)
+                cursor.execute("VACUUM")
+                cursor.commit()
+            except:
+                pass
+    except:
+        pass
+
 def cache_clear_all():
     cache_clear()
     cache_clear_meta()
@@ -235,6 +249,16 @@ def _get_connection_providers():
     conn.row_factory = _dict_factory
     return conn
     
+def _get_connection_cursor_search():
+    conn = _get_connection_search()
+    return conn.cursor()
+
+def _get_connection_search():
+    control.makeFile(control.dataPath)
+    conn = db.connect(control.searchFile)
+    conn.row_factory = _dict_factory
+    return conn
+
 def _dict_factory(cursor, row):
     d = {}
     for idx, col in enumerate(cursor.description):
@@ -261,20 +285,10 @@ def _is_cache_valid(cached_time, cache_timeout):
     diff = now - cached_time
     return (cache_timeout * 3600) > diff
 
-"""
-    The cache.v file tracks the last version of s.m.c to access cache.db
-    If s.m.c knows that that version creates a stale or incompatible cache,
-    then clear the cache.
-
-    1.00.009 wipes the cache to fix any issues a new module version could bring.
-"""
-
 def cache_version_check():
 
     if _find_cache_version():
-        cache_clear()
-        if control.addonInfo('id') == 'plugin.video.bennu':
-            cache_clear_meta(); cache_clear_providers()
+        cache_clear(); cache_clear_meta(); cache_clear_providers()
         control.infoDialog(control.lang(32057).encode('utf-8'), sound=True, icon='INFO')
         
 def _find_cache_version():
@@ -288,5 +302,6 @@ def _find_cache_version():
         curVersion = control.addon('script.module.covenant').getAddonInfo('version')
         if oldVersion != curVersion: 
             with open(versionFile, 'wb') as fh: fh.write(curVersion)
+            return True
+        else: return False
     except: return False
-    return ( oldVersion < '1.00.009' or oldVersion > curVersion )

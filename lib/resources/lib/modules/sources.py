@@ -49,6 +49,10 @@ class sources:
 
     def play(self, title, year, imdb, tvdb, season, episode, tvshowtitle, premiered, meta, select):
         try:
+    
+            control.progressDialogBG.create(control.addonInfo('name'), '')
+            control.progressDialogBG.update(0, control.lang(32600).encode('utf-8'))
+              
             url = None
             
             control.moderator()
@@ -104,6 +108,9 @@ class sources:
 
         meta = control.window.getProperty(self.metaProperty)
         meta = json.loads(meta)
+
+        # (Kodi bug?) [name,role] is incredibly slow on this directory, [name] is barely tolerable, so just nuke it for speed!
+        if 'cast' in meta: del(meta['cast'])
 
         sysaddon = sys.argv[0]
 
@@ -295,6 +302,10 @@ class sources:
 
     def getSources(self, title, year, imdb, tvdb, season, episode, tvshowtitle, premiered, quality='HD', timeout=30):
 
+        try:
+            if control.progressDialogBG: control.progressDialogBG.close()
+        except: pass
+        
         progressDialog = control.progressDialog if control.setting('progress.dialog') == '0' else control.progressDialogBG
         progressDialog.create(control.addonInfo('name'), '')
         progressDialog.update(0)
@@ -303,7 +314,7 @@ class sources:
 
         sourceDict = self.sourceDict
         
-        progressDialog.update(0, control.lang(32599).encode('utf-8'))
+        progressDialog.update(0, control.lang(32600).encode('utf-8'))
 
         content = 'movie' if tvshowtitle == None else 'episode'
         if content == 'movie':
@@ -313,8 +324,6 @@ class sources:
             sourceDict = [(i[0], i[1], getattr(i[1], 'tvshow', None)) for i in sourceDict]
             genres = trakt.getGenre('show', 'tvdb', tvdb)
         
-        progressDialog.update(0, control.lang(32600).encode('utf-8'))
-
         sourceDict = [(i[0], i[1], i[2]) for i in sourceDict if not hasattr(i[1], 'genre_filter') or not i[1].genre_filter or any(x in i[1].genre_filter for x in genres)]
         sourceDict = [(i[0], i[1]) for i in sourceDict if not i[2] == None]
 
@@ -356,6 +365,8 @@ class sources:
         string1 = control.lang(32404).encode('utf-8')
         string2 = control.lang(32405).encode('utf-8')
         string3 = control.lang(32406).encode('utf-8')
+        string4 = control.lang(32601).encode('utf-8')
+        string5 = control.lang(32602).encode('utf-8')
 
         try: timeout = int(control.setting('scrapers.timeout.1'))
         except: pass
@@ -391,7 +402,7 @@ class sources:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True]
                         if i >= timeout and len(mainleft) == 0 and len(self.sources) >= 100 * len(info): break # improve responsiveness
-                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, source_total_label)
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  %s:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, str(string4), source_total_label)
                         if len(info) > 6: line2 = string3 % (str(len(info)))
                         elif len(info) > 0: line2 = string3 % (', '.join(info))
                         else: break
@@ -403,20 +414,19 @@ class sources:
                     try:
                         mainleft = [sourcelabelDict[x.getName()] for x in threads if x.is_alive() == True and x.getName() in mainsourceDict]
                         info = mainleft
-                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  Total:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, source_total_label)
-                        if len(info) > 6: line2 = 'Waiting for: %s' % (str(len(info)))
-                        elif len(info) > 0: line2 = 'Waiting for: %s' % (', '.join(info))
+                        line1 = '4K:  %s  |  1080p:  %s  |  720p:  %s  |  SD:  %s  |  %s:  %s' % (source_4k_label, source_1080_label, source_720_label, source_sd_label, str(string4), source_total_label)
+                        if len(info) > 6: line2 = '%s: %s' % (str(string5), str(len(info)))
+                        elif len(info) > 0: line2 = '%s: %s' % (str(string5), ', '.join(info))
                         else: break
                         percent = int(100 * float(i) / (2 * timeout) + 0.5) % 100
                         progressDialog.update(max(1, percent), line1, line2)
                     except:
                         break
-
+                        
                 time.sleep(0.5)
             except:
                 pass
 
-                
         if control.addonInfo('id') == 'plugin.video.bennu':
             try:
                 if progressDialog: progressDialog.update(100, control.lang(30726).encode('utf-8'), control.lang(30731).encode('utf-8'))

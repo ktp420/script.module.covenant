@@ -39,7 +39,6 @@ queueMenu = control.lang(32065).encode('utf-8')
 
 class navigator:
     def root(self):
-        cache.cache_version_check()
         self.addDirectoryItem(32001, 'movieNavigator', 'movies.png', 'DefaultMovies.png')
         self.addDirectoryItem(32002, 'tvNavigator', 'tvshows.png', 'DefaultTVShows.png')
 
@@ -200,6 +199,7 @@ class navigator:
         self.addDirectoryItem(32048, 'openSettings&query=5.0', 'tools.png', 'DefaultAddonProgram.png')
         self.addDirectoryItem(32049, 'viewsNavigator', 'tools.png', 'DefaultAddonProgram.png')
         self.addDirectoryItem(32050, 'clearSources', 'tools.png', 'DefaultAddonProgram.png')
+        self.addDirectoryItem(32604, 'clearCacheSearch', 'tools.png', 'DefaultAddonProgram.png')
         self.addDirectoryItem(32052, 'clearCache', 'tools.png', 'DefaultAddonProgram.png')
         self.addDirectoryItem(32073, 'authTrakt', 'trakt.png', 'DefaultAddonProgram.png')
 
@@ -238,7 +238,6 @@ class navigator:
         self.addDirectoryItem(32030, 'tvPerson', 'people-search.png', 'DefaultTVShows.png')
 
         self.endDirectory()
-
 
     def views(self):
         try:
@@ -311,6 +310,14 @@ class navigator:
         cache.cache_clear_providers()
         control.infoDialog(control.lang(32057).encode('utf-8'), sound=True, icon='INFO')
 
+    def clearCacheSearch(self):
+        control.idle()
+        yes = control.yesnoDialog(control.lang(32056).encode('utf-8'), '', '')
+        if not yes: return
+        from resources.lib.modules import cache
+        cache.cache_clear_search()
+        control.infoDialog(control.lang(32057).encode('utf-8'), sound=True, icon='INFO')
+
     def clearCacheAll(self):
         control.idle()
         yes = control.yesnoDialog(control.lang(32056).encode('utf-8'), '', '')
@@ -332,7 +339,6 @@ class navigator:
         item.setArt({'icon': thumb, 'thumb': thumb})
         if not addonFanart == None: item.setProperty('Fanart_Image', addonFanart)
         control.addItem(handle=syshandle, url=url, listitem=item, isFolder=isFolder)
-
 
     def endDirectory(self):
         control.content(syshandle, 'addons')
